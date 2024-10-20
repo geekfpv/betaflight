@@ -507,20 +507,20 @@ static void applyLedFixedLayers(void)
         case LED_FUNCTION_COLOR:
             color = ledStripStatusModeConfig()->colors[ledGetColor(ledConfig)];
 
-            hsvColor_t nextColor = ledStripStatusModeConfig()->colors[(ledGetColor(ledConfig) + 1 + LED_CONFIGURABLE_COLOR_COUNT) % LED_CONFIGURABLE_COLOR_COUNT];
-            hsvColor_t previousColor = ledStripStatusModeConfig()->colors[(ledGetColor(ledConfig) - 1 + LED_CONFIGURABLE_COLOR_COUNT) % LED_CONFIGURABLE_COLOR_COUNT];
-
-            if (ledGetOverlayBit(ledConfig, LED_OVERLAY_THROTTLE)) {   //smooth fade with selected Aux channel of all HSV values from previousColor through color to nextColor
+            if (ledGetOverlayBit(ledConfig, LED_OVERLAY_THROTTLE)) {
                 const int auxInput = rcData[ledStripStatusModeConfig()->ledstrip_aux_channel];
-                int centerPWM = (PWM_RANGE_MIN + PWM_RANGE_MAX) / 2;
-                if (auxInput < centerPWM) {
-                    color.h = scaleRange(auxInput, PWM_RANGE_MIN, centerPWM, previousColor.h, color.h);
-                    color.s = scaleRange(auxInput, PWM_RANGE_MIN, centerPWM, previousColor.s, color.s);
-                    color.v = scaleRange(auxInput, PWM_RANGE_MIN, centerPWM, previousColor.v, color.v);
-                } else {
-                    color.h = scaleRange(auxInput, centerPWM, PWM_RANGE_MAX, color.h, nextColor.h);
-                    color.s = scaleRange(auxInput, centerPWM, PWM_RANGE_MAX, color.s, nextColor.s);
-                    color.v = scaleRange(auxInput, centerPWM, PWM_RANGE_MAX, color.v, nextColor.v);
+                int throttleAmount = scaleRange(auxInput, PWM_RANGE_MIN, PWM_RANGE_MAX, 0, ledCounts.count-1);
+
+                //When throttle is equal to 0, power on 3 led to comply with MultiGP Champs rules
+                if(throttleAmount==0)
+                {
+                    throttleAmount=3;
+                }
+
+                if (ledIndex > throttleAmount) {
+                    color.h = 0;
+                    color.s = 0;
+                    color.v = 0;
                 }
             }
 
